@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Chastone AI</title>
+</head>
+<body>
+
+<h2>🎮 Chastone</h2>
+
+<p>Player HP: <span id="php">100</span></p>
+<p>Enemy HP: <span id="ehp">100</span></p>
+
+<button onclick="playerAction('attack')">Attack</button>
+<button onclick="playerAction('defend')">Defend</button>
+
+<p id="log"></p>
+
+<script>
+let playerHP = 100;
+let enemyHP = 100;
+let lastMove = "attack";
+
+async function getEnemyMove() {
+  const res = await fetch("http://127.0.0.1:8000/enemy-move", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      player_hp: playerHP,
+      enemy_hp: enemyHP,
+      player_last_move: lastMove
+    })
+  });
+  const data = await res.json();
+  return data.move;
+}
+
+async function playerAction(action) {
+  lastMove = action;
+
+  if (action === "attack") {
+    enemyHP -= 10;
+  }
+
+  const enemyMove = await getEnemyMove();
+
+  if (enemyMove === "attack") {
+    playerHP -= 10;
+  } else if (enemyMove === "heal") {
+    enemyHP += 5;
+  }
+
+  document.getElementById("php").innerText = playerHP;
+  document.getElementById("ehp").innerText = enemyHP;
+  document.getElementById("log").innerText =
+    `Enemy used: ${enemyMove}`;
+
+  if (playerHP <= 0) alert("❌ You lost!");
+  if (enemyHP <= 0) alert("🏆 You win!");
+}
+</script>
+
+</body>
+</html>
